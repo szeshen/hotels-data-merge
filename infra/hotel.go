@@ -1,9 +1,11 @@
 package infra
 
 import (
+	"context"
 	"hotel-data-merge/usecase"
 	"net/http"
 	"sync"
+	"time"
 )
 
 const (
@@ -44,7 +46,7 @@ func NewHotelRepo(client *http.Client) usecase.HotelRepository {
 	}
 }
 
-func (hr *HotelRepo) ListHotels() map[string][]usecase.Hotel {
+func (hr *HotelRepo) ListHotels(ctx context.Context) map[string][]usecase.Hotel {
 	hotels := map[string][]usecase.Hotel{}
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
@@ -53,7 +55,9 @@ func (hr *HotelRepo) ListHotels() map[string][]usecase.Hotel {
 		wg.Add(1)
 		go func(config HotelSourceConfig) {
 			defer wg.Done()
-			normalizedHotels, err := config.hotelFetcher.GetHotels(hr.httpClient, config.name)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			normalizedHotels, err := config.hotelFetcher.GetHotels(ctx, hr.httpClient, config.name)
 			if err != nil {
 				return
 			}

@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"fmt"
 	"hotel-data-merge/dto"
 	"hotel-data-merge/pkg/cache"
@@ -9,7 +10,7 @@ import (
 )
 
 type HotelRepository interface {
-	ListHotels() map[string][]Hotel
+	ListHotels(ctx context.Context) map[string][]Hotel
 }
 
 type HotelUsecase struct {
@@ -30,7 +31,7 @@ const (
 	CacheKey           = "hotels-cache-key"
 )
 
-func (u *HotelUsecase) ListHotels(req *dto.ListHotelsRequest) *dto.ListHotelsResponse {
+func (u *HotelUsecase) ListHotels(ctx context.Context, req *dto.ListHotelsRequest) *dto.ListHotelsResponse {
 	var mergedHotels map[string]Hotel
 	var filteredIds []string
 	var hotelsFromExternal map[string][]Hotel
@@ -49,7 +50,7 @@ func (u *HotelUsecase) ListHotels(req *dto.ListHotelsRequest) *dto.ListHotelsRes
 	if ok {
 		hotelsFromExternal = cacheVal.(map[string][]Hotel)
 	} else {
-		hotelsFromExternal = u.hotelRepo.ListHotels()
+		hotelsFromExternal = u.hotelRepo.ListHotels(ctx)
 
 		// this highly depends on how often the data changes
 		u.cache.Set(CacheKey, hotelsFromExternal, 60*time.Minute)

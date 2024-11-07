@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"hotel-data-merge/usecase"
@@ -10,14 +11,19 @@ import (
 )
 
 type HotelFetcher interface {
-	GetHotels(httpClient *http.Client, name string) ([]usecase.Hotel, error)
+	GetHotels(ctx context.Context, httpClient *http.Client, name string) ([]usecase.Hotel, error)
 }
 
 type PaperfliesFetcher struct{}
 
-func (n PaperfliesFetcher) GetHotels(httpClient *http.Client, name string) ([]usecase.Hotel, error) {
+func (n PaperfliesFetcher) GetHotels(ctx context.Context, httpClient *http.Client, name string) ([]usecase.Hotel, error) {
 	endpoint := fmt.Sprintf("%s%s", url, name)
-	resp, err := httpClient.Get(endpoint)
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch data from %s: %v", endpoint, err)
 	}
@@ -79,9 +85,14 @@ func normalizePaperfliesHotel(h usecase.PaperfliesHotel) usecase.Hotel {
 
 type PatagoniaFetcher struct{}
 
-func (n PatagoniaFetcher) GetHotels(httpClient *http.Client, name string) ([]usecase.Hotel, error) {
+func (n PatagoniaFetcher) GetHotels(ctx context.Context, httpClient *http.Client, name string) ([]usecase.Hotel, error) {
 	endpoint := fmt.Sprintf("%s%s", url, name)
-	resp, err := httpClient.Get(endpoint)
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch data from %s: %v", endpoint, err)
 	}
@@ -136,9 +147,14 @@ func normalizePatagoniaHotel(h usecase.PatagoniaHotel) usecase.Hotel {
 
 type AcmeFetcher struct{}
 
-func (n AcmeFetcher) GetHotels(httpClient *http.Client, name string) ([]usecase.Hotel, error) {
+func (n AcmeFetcher) GetHotels(ctx context.Context, httpClient *http.Client, name string) ([]usecase.Hotel, error) {
 	endpoint := fmt.Sprintf("%s%s", url, name)
-	resp, err := httpClient.Get(endpoint)
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch data from %s: %v", endpoint, err)
 	}

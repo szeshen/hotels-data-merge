@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"fmt"
 	"hotel-data-merge/dto"
 	"hotel-data-merge/pkg/cache"
@@ -159,12 +160,12 @@ func TestListHotels(t *testing.T) {
 	t.Run("should successfully list hotels without filter and cache", func(t *testing.T) {
 		mockHotelRepo, mockCache := setupHotelTest()
 		usecase := NewHotelUsecase(mockHotelRepo, mockCache)
-
+		ctx := context.Background()
 		mockCache.On("Get", CacheKey).Return(nil, false)
 		mockCache.On("Set", CacheKey, normalizedHotels(), 60*time.Minute)
-		mockHotelRepo.On("ListHotels").Return(normalizedHotels())
+		mockHotelRepo.On("ListHotels", ctx).Return(normalizedHotels())
 
-		hotels := usecase.ListHotels(&dto.ListHotelsRequest{})
+		hotels := usecase.ListHotels(ctx, &dto.ListHotelsRequest{})
 
 		assert.NotEmpty(t, hotels)
 		assert.ElementsMatch(t, mockReturnedHotels()[0].Amenities.GeneralAmenity, hotels.Data[0].Amenities.GeneralAmenity)
@@ -184,7 +185,7 @@ func TestListHotels(t *testing.T) {
 		usecase := NewHotelUsecase(mockHotelRepo, mockCache)
 
 		mockCache.On("Get", CacheKey).Return(normalizedHotels(), true)
-		hotels := usecase.ListHotels(&dto.ListHotelsRequest{})
+		hotels := usecase.ListHotels(context.Background(), &dto.ListHotelsRequest{})
 
 		assert.NotEmpty(t, hotels)
 		assert.ElementsMatch(t, mockReturnedHotels()[0].Amenities.GeneralAmenity, hotels.Data[0].Amenities.GeneralAmenity)
@@ -205,7 +206,7 @@ func TestListHotels(t *testing.T) {
 
 		normalizedHotels := normalizedHotels()
 		mockCache.On("Get", CacheKey).Return(normalizedHotels, true)
-		hotels := usecase.ListHotels(&dto.ListHotelsRequest{
+		hotels := usecase.ListHotels(context.Background(), &dto.ListHotelsRequest{
 			DestinationIDs: []string{"2"},
 		})
 
@@ -220,7 +221,7 @@ func TestListHotels(t *testing.T) {
 
 		normalizedHotels := normalizedHotels()
 		mockCache.On("Get", CacheKey).Return(normalizedHotels, true)
-		hotels := usecase.ListHotels(&dto.ListHotelsRequest{
+		hotels := usecase.ListHotels(context.Background(), &dto.ListHotelsRequest{
 			HotelIDs:       []string{mockHotelId},
 			DestinationIDs: []string{"2"},
 		})
