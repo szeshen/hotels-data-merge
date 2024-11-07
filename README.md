@@ -24,7 +24,7 @@ Simple Go application which cleans and merges hotel data from multiple sources.
 2. Fetching of supplier hotel data parallelly using go routines
 
 ### Further optimisation considerations (not implemented)
-1. Pagination
+1. Pagination can be implemented if the data size gets too big.
 2. Depending on how frequently the supplier responses get updated, if it is a known frequency (eg. once every month), we can consider using a cronjob to pull and store the data in a database (eg. DynamoDB), and read from database instead.
 
 ## Testing pipeline
