@@ -1,6 +1,6 @@
 module hotel-data-merge
 
-go 1.21.3
+go 1.21
 
 require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
