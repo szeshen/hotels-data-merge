@@ -1,6 +1,7 @@
 package srv
 
 import (
+	"context"
 	"encoding/json"
 	"hotel-data-merge/dto"
 	"hotel-data-merge/usecase"
@@ -17,6 +18,7 @@ func NewHotelHandler(hotelUsecase *usecase.HotelUsecase) *HotelHandler {
 }
 
 func (h *HotelHandler) ListHotelsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	w.Header().Set("Content-Type", "application/json")
 	req := &dto.ListHotelsRequest{}
 
@@ -29,6 +31,6 @@ func (h *HotelHandler) ListHotelsHandler(w http.ResponseWriter, r *http.Request)
 		req.DestinationIDs = strings.Split(destinationIDsStr, ",")
 	}
 
-	hotel := h.hotelUsecase.ListHotels(req)
+	hotel := h.hotelUsecase.ListHotels(ctx, req)
 	json.NewEncoder(w).Encode(&hotel)
 }

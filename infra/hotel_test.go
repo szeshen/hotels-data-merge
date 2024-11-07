@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"hotel-data-merge/usecase"
@@ -231,7 +232,7 @@ func TestListHotels(t *testing.T) {
 
 	t.Run("should successfully list and normalize hotels", func(t *testing.T) {
 		r := NewHotelRepo(mockClient)
-		hotels := r.ListHotels()
+		hotels := r.ListHotels(context.Background())
 
 		assert.NotEmpty(t, hotels)
 		assert.Equal(t, normalizedHotels, hotels)
