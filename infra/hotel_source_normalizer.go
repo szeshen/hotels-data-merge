@@ -176,7 +176,7 @@ func (n AcmeFetcher) GetHotels(ctx context.Context, httpClient *http.Client, nam
 func normalizeAcmeHotel(h usecase.AcmeHotel) usecase.Hotel {
 	address := h.Address
 
-	if h.Address != nil && h.Postcode != nil {
+	if h.Address != nil && h.Postcode != nil && !strings.Contains(*h.Address, *h.Postcode) {
 		add := fmt.Sprintf("%s, %s", strings.TrimSpace(*h.Address), strings.TrimSpace(*h.Postcode))
 		address = &add
 	}
