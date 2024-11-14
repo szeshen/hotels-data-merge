@@ -36,13 +36,13 @@ func (u *HotelUsecase) ListHotels(ctx context.Context, req *dto.ListHotelsReques
 	var filteredIds []string
 	var hotelsFromExternal map[string][]Hotel
 
-	filterType := GroupByDestination
+	// filterType := GroupByDestination
 	filteredIds = req.DestinationIDs
 
 	// hotel id takes precedence for filter because it is more specific
 	if len(req.HotelIDs) > 0 {
 		filteredIds = req.HotelIDs
-		filterType = GroupByHotel
+		// filterType = GroupByHotel
 	}
 
 	cacheVal, ok := u.cache.Get(CacheKey)
@@ -57,12 +57,65 @@ func (u *HotelUsecase) ListHotels(ctx context.Context, req *dto.ListHotelsReques
 	}
 
 	mergedHotels = mergeHotelByID(hotelsFromExternal)
-	filteredHotels := filterHotels(filterType, filteredIds, mergedHotels)
+
+	hotelPartition := hotelPartitioning(mergedHotels)
+
+	// return all hotels if there is no filter
+	// filteredHotels := filterHotels(filterType, filteredIds, mergedHotels)
+	filteredHotels := filterHotelsV2(filteredIds, hotelPartition)
+
+	// add pagination here. page and limit
 	cleanedHotels := cleanMergedData(filteredHotels)
 
 	return &dto.ListHotelsResponse{
 		Data: cleanedHotels,
 	}
+}
+
+// map[string]Hotel -> map of the different id and the hotel detail
+func hotelPartitioning(hotels map[string]Hotel) map[string]map[string][]Hotel {
+	hotelPartition := map[string]map[string][]Hotel{}
+
+	for _, hotel := range hotels {
+		partitionKeyHotelID := string(hotel.HotelID[0])
+		partitionKeyDestinationID := string(fmt.Sprintf("%d", hotel.DestinationID)[0])
+
+		if _, exists := hotelPartition[partitionKeyHotelID]; exists {
+			hotelPartition[partitionKeyHotelID][hotel.HotelID] = append(hotelPartition[partitionKeyHotelID][hotel.HotelID], hotel)
+		} else {
+			hotelPartition[partitionKeyHotelID] = map[string][]Hotel{
+				hotel.HotelID: {hotel},
+			}
+		}
+
+		if _, exists := hotelPartition[partitionKeyDestinationID]; exists {
+			hotelPartition[partitionKeyDestinationID][fmt.Sprintf("%d", hotel.DestinationID)] = append(hotelPartition[partitionKeyDestinationID][fmt.Sprintf("%d", hotel.DestinationID)], hotel)
+		} else {
+			hotelPartition[partitionKeyDestinationID] = map[string][]Hotel{
+				fmt.Sprintf("%d", hotel.DestinationID): {hotel},
+			}
+		}
+	}
+
+	return hotelPartition
+}
+
+func filterHotelsV2(ids []string, hotelPartioning map[string]map[string][]Hotel) map[string]Hotel {
+	idsToInclude := map[string]bool{}
+	for _, id := range ids {
+		idsToInclude[id] = true
+	}
+
+	filteredHotels := map[string]Hotel{}
+
+	for _, id := range ids {
+		partitionKey := string(id[0])
+		hotelsInPartition := hotelPartioning[partitionKey]
+		fmt.Println(hotelsInPartition)
+		// filteredHotels[id] = hotelsInPartition[id]
+	}
+
+	return filteredHotels
 }
 
 func filterHotels(filterType string, ids []string, mergedHotels map[string]Hotel) map[string]Hotel {
